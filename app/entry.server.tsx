@@ -1,6 +1,6 @@
-import { renderToString } from "react-dom/server";
-import { RemixServer } from "remix";
-import type { EntryContext } from "remix";
+import {renderToString} from "react-dom/server";
+import {RemixServer} from "remix";
+import type {EntryContext} from "remix";
 
 export default function handleRequest(
   request: Request,
@@ -9,7 +9,7 @@ export default function handleRequest(
   remixContext: EntryContext
 ) {
   const markup = renderToString(
-    <RemixServer context={remixContext} url={request.url} />
+    <RemixServer context={remixContext} url={request.url}/>
   );
 
   responseHeaders.set("Content-Type", "text/html");
