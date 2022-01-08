@@ -19,7 +19,6 @@ const storage = createCookieSessionStorage({
   }
 });
 
-
 type LoginForm = {
   username: string;
   password: string;
@@ -41,6 +40,13 @@ export async function login({
   if (!isCorrectPassword) return null;
 
   return user;
+}
+
+export async function register({username, password}: LoginForm) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  return db.user.create({
+    data: { username, passwordHash }
+  });
 }
 
 export async function createUserSession(
