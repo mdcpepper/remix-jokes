@@ -63,7 +63,15 @@ export const action: ActionFunction = async ({
   return redirect(`/jokes/${joke.id}`);
 };
 
-export default function NewJokeRoute() {
+export function ErrorBoundary() {
+  return (
+    <div className="error-container">
+      Something unexpected went wrong. Sorry about that.
+    </div>
+  )
+}
+
+export default function NewJoke() {
   const actionData = useActionData<ActionData>();
 
   return (

@@ -18,6 +18,14 @@ export const loader: LoaderFunction = async () => {
   return data;
 };
 
+export function ErrorBoundary() {
+  return (
+    <div className="error-container">
+      Something unexpected went wrong. Sorry about that.
+    </div>
+  )
+}
+
 export default function JokesIndexRoute() {
   const data = useLoaderData<LoaderData>();
 
