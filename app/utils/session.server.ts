@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
-import { createCookieSessionStorage, redirect } from "remix";
-import { db } from "./db.server";
+import {createCookieSessionStorage, redirect} from "remix";
+import {db} from "./db.server";
 
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -82,4 +82,29 @@ export async function requireUserId(
   }
 
   return userId;
+}
+
+export async function getUser(request: Request) {
+  const userId = await getUserId(request);
+  if (typeof userId !== 'string') {
+    return null;
+  }
+
+  try {
+    return await db.user.findUnique({
+      where: {id: userId}
+    });
+  } catch {
+    throw logout(request);
+  }
+}
+
+export async function logout(request: Request) {
+  const session = await storage.getSession(request.headers.get('Cookie'));
+
+  return redirect("/login", {
+    headers: {
+      "Set-Cookie": await storage.destroySession(session),
+    },
+  });
 }
