@@ -1,8 +1,15 @@
-import type {ActionFunction, LinksFunction} from "remix";
+import type { ActionFunction, LinksFunction, MetaFunction } from "remix";
 import { json, Link, useActionData, useSearchParams } from "remix";
 import { db } from "~/utils/db.server";
 import { createUserSession, login, register } from "~/utils/session.server";
 import stylesUrl from "~/styles/login.css";
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "Remix Jokes | Login",
+    description: "Login to submit your own jokes to Remix Jokes!",
+  };
+};
 
 export const links: LinksFunction = () => {
   return [{rel: "stylesheet", href: stylesUrl}];
