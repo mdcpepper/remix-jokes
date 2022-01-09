@@ -1,6 +1,7 @@
 import type { ActionFunction, LoaderFunction } from "remix";
-import { useActionData, redirect, json, useCatch, Link, Form } from "remix";
+import { Link, Form, useActionData, redirect, json, useCatch, useTransition} from "remix";
 import { db } from "~/utils/db.server";
+import { JokeDisplay } from "~/components/joke";
 import { getUserId, requireUserId } from "~/utils/session.server";
 
 export const loader: LoaderFunction = async ({
@@ -100,6 +101,23 @@ export function ErrorBoundary({ error }: { error: Error }) {
 
 export default function NewJoke() {
   const actionData = useActionData<ActionData>();
+  const transition = useTransition();
+
+  if (transition.submission) {
+    const name = transition.submission.formData.get('name');
+    const content = transition.submission.formData.get('content');
+
+    if (
+      typeof name === 'string' &&
+      typeof content === 'string' &&
+      !validateJokeName(name) &&
+      !validateJokeContent(content)
+    ) {
+      return (
+        <JokeDisplay joke={{ name, content }} isOwner={true} canDelete={false} />
+      );
+    }
+  }
 
   return (
     <div>
