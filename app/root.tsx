@@ -1,5 +1,5 @@
 import type { LinksFunction, MetaFunction } from "remix";
-import { Links, LiveReload, Outlet, useCatch, Meta } from "remix";
+import { Links, LiveReload, Outlet, useCatch, Meta, Scripts } from "remix";
 
 import globalStylesUrl from "~/styles/global.css";
 import globalMediumStylesUrl from "~/styles/global-medium.css";
@@ -41,7 +41,8 @@ export const links: LinksFunction = () => {
 };
 
 function Document({
-  children
+  children,
+  title = `Remix: So great, it's funny!`
 }: {
   children: React.ReactNode;
   title?: string;
@@ -50,11 +51,13 @@ function Document({
     <html lang="en">
       <head>
         <meta charSet="utf-8"/>
+        <title>{title}</title>
         <Meta />
         <Links/>
       </head>
       <body>
-      {children}
+        {children}
+        <Scripts />
         {process.env.NODE_ENV === "development" ? (<LiveReload/>) : null}
       </body>
     </html>
@@ -78,6 +81,7 @@ export function CatchBoundary() {
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
+  console.error(error);
 
   return (
     <Document title="Uh-oh!">

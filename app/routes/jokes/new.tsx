@@ -1,7 +1,7 @@
-import type {ActionFunction, LoaderFunction} from "remix";
-import {useActionData, redirect, json, useCatch, Link} from "remix";
+import type { ActionFunction, LoaderFunction } from "remix";
+import { useActionData, redirect, json, useCatch, Link, Form } from "remix";
 import { db } from "~/utils/db.server";
-import {getUserId, requireUserId} from "~/utils/session.server";
+import { getUserId, requireUserId } from "~/utils/session.server";
 
 export const loader: LoaderFunction = async ({
   request
@@ -88,7 +88,9 @@ export function CatchBoundary() {
   }
 }
 
-export function ErrorBoundary() {
+export function ErrorBoundary({ error }: { error: Error }) {
+  console.error(error);
+
   return (
     <div className="error-container">
       Something unexpected went wrong. Sorry about that.
@@ -102,7 +104,7 @@ export default function NewJoke() {
   return (
     <div>
       <p>Add your own hilarious joke</p>
-      <form method="post">
+      <Form method="post">
         {actionData?.formError ? (
           <p className="form-validation-error">{actionData.formError}</p>
         ) : undefined}
@@ -168,7 +170,7 @@ export default function NewJoke() {
             Add
           </button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }

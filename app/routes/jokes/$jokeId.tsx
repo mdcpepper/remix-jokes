@@ -98,6 +98,7 @@ export function CatchBoundary() {
 
 export function ErrorBoundary({ error }: { error: Error }) {
   console.error(error);
+
   const { jokeId } = useParams();
 
   return (
