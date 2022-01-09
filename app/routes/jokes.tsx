@@ -1,5 +1,6 @@
 import type { LinksFunction, LoaderFunction } from "remix";
 import { Link, Outlet, useLoaderData } from "remix";
+import type { Joke } from "@prisma/client";
 import { db } from "~/utils/db.server";
 import { getUser } from "~/utils/session.server";
 
@@ -34,8 +35,12 @@ export const loader: LoaderFunction = async ({
     }),
     user: await getUser(request),
   };
+
   return data;
 };
+
+// https://github.com/remix-run/remix/issues/599#issuecomment-978364515
+export function CatchBoundary() {}
 
 export default function JokesRoute() {
   const data = useLoaderData<LoaderData>();

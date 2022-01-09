@@ -64,6 +64,7 @@ export function CatchBoundary() {
 }
 
 export function ErrorBoundary({ error }: { error: Error }) {
+
   return (
     <Document title="Uh-oh!">
       <div className="error-container">
