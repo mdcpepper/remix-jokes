@@ -33,7 +33,7 @@ export const loader: LoaderFunction = async ({
       select: {id: true, name: true},
       orderBy: {createdAt: "desc"},
     }),
-    user: await getUser(request),
+    user: await getUser(request, { select: { username: true }}),
   };
 
   return data;

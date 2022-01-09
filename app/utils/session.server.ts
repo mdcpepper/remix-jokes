@@ -95,7 +95,7 @@ export async function requireUserId(
   return userId;
 }
 
-export async function getUser(request: Request) {
+export async function getUser(request: Request, query: object = {}) {
   const userId = await getUserId(request);
   if (typeof userId !== 'string') {
     return null;
@@ -103,6 +103,7 @@ export async function getUser(request: Request) {
 
   try {
     return await db.user.findUnique({
+      ...query,
       where: {id: userId}
     });
   } catch {
