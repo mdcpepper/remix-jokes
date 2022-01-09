@@ -27,14 +27,16 @@ type LoaderData = {
 export const loader: LoaderFunction = async ({
   request
 }) => {
-  const data: LoaderData = {
-    jokeListItems: await db.joke.findMany({
+  const [jokeListItems, user] = await Promise.all([
+    db.joke.findMany({
       take: 5,
       select: {id: true, name: true},
       orderBy: {createdAt: "desc"},
     }),
-    user: await getUser(request, { select: { username: true }}),
-  };
+    getUser(request, { select: { username: true }})
+  ]);
+
+  const data: LoaderData = {jokeListItems, user};
 
   return data;
 };

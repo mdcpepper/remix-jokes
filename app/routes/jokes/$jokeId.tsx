@@ -31,7 +31,7 @@ export const loader: LoaderFunction = async ({
   request,
   params
 }) => {
-  const [userId, joke ] = await Promise.all([
+  const [userId, joke] = await Promise.all([
     getUserId(request),
     db.joke.findUnique({where: { id: params.jokeId }})
   ]);
@@ -54,8 +54,10 @@ export const action: ActionFunction = async ({
 }) => {
   const form = await request.formData();
   if (form.get("_method") === "delete") {
-    const userId = await requireUserId(request);
-    const joke = await db.joke.findUnique({where: { id: params.jokeId }});
+    const [userId, joke] = await Promise.all([
+      requireUserId(request),
+      db.joke.findUnique({where: { id: params.jokeId }}),
+    ]);
 
     if (!joke) {
       throw new Response("Can't delete what does not exist", { status: 404 });
