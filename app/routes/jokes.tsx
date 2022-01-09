@@ -42,7 +42,7 @@ export const loader: LoaderFunction = async ({
 // https://github.com/remix-run/remix/issues/599#issuecomment-978364515
 export function CatchBoundary() {}
 
-export default function JokesRoute() {
+export default function Jokes() {
   const data = useLoaderData<LoaderData>();
 
   return (
@@ -81,7 +81,7 @@ export default function JokesRoute() {
             <ul>
               {data.jokeListItems.map(joke => (
                 <li key={joke.id}>
-                  <Link to={joke.id}>{joke.name}</Link>
+                  <Link to={joke.id} prefetch="intent">{joke.name}</Link>
                 </li>
               ))}
             </ul>
