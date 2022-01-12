@@ -1,17 +1,18 @@
-import type { LoaderFunction } from "remix";
-import { useLoaderData, Link, useCatch } from "remix";
+import type { LoaderFunction, MetaFunction } from "remix";
+import { Link, useCatch, useLoaderData } from "remix";
 import { Joke } from "@prisma/client";
-import { db } from "~/utils/db.server";
+import { getRandomJoke } from "~/domain/jokes/joke";
 
 type LoaderData = { randomJoke: Joke };
 
+export const meta: MetaFunction = ({ data }: { data: LoaderData }) => {
+  return {
+    title: "Remix Jokes | Random Joke"
+  };
+};
+
 export const loader: LoaderFunction = async () => {
-  const count = await db.joke.count();
-  const randomRowNumber = Math.floor(Math.random() * count);
-  const [randomJoke] = await db.joke.findMany({
-    take: 1,
-    skip: randomRowNumber
-  });
+  const randomJoke = await getRandomJoke({ select: { id: true, name: true, content: true } });
 
   if (!randomJoke) {
     throw new Response("No random joke found", {
@@ -19,7 +20,7 @@ export const loader: LoaderFunction = async () => {
     });
   }
 
-  const data: LoaderData = {randomJoke};
+  const data: LoaderData = { randomJoke };
 
   return data;
 };
@@ -45,7 +46,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
     <div className="error-container">
       Something unexpected went wrong. Sorry about that.
     </div>
-  )
+  );
 }
 
 export default function JokesIndexRoute() {

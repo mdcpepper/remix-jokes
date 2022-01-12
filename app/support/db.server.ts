@@ -1,9 +1,9 @@
-import {PrismaClient} from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 let db: PrismaClient;
 
 declare global {
-  var __db: PrismaClient | undefined;
+  let __db: PrismaClient | undefined;
 }
 
 // this is needed because in development we don't want to restart

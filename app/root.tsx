@@ -1,5 +1,6 @@
+// noinspection HtmlRequiredTitleElement
 import type { LinksFunction, MetaFunction } from "remix";
-import { Links, LiveReload, Outlet, useCatch, Meta, Scripts } from "remix";
+import { Links, LiveReload, Meta, Outlet, Scripts, useCatch } from "remix";
 
 import globalStylesUrl from "~/styles/global.css";
 import globalMediumStylesUrl from "~/styles/global-medium.css";
@@ -7,17 +8,17 @@ import globalLargeStylesUrl from "~/styles/global-large.css";
 import React from "react";
 
 export const meta: MetaFunction = () => {
-  const description = `Learn Remix and laugh at the same time!`;
+  const description = "Learn Remix and laugh at the same time!";
 
   return {
     description,
-    keywords: 'Remix,jokes',
-    'twitter:image': 'https://remix-jokes.lol/social.png',
-    'twitter:card': 'summary_large_image',
-    'twitter:creator': '@remix_run',
-    'twitter:site': '@remix_run',
-    'twitter:title': 'Remix Jokes',
-    'twitter:description': description,
+    keywords: "Remix,jokes",
+    "twitter:image": "https://remix-jokes.lol/social.png",
+    "twitter:card": "summary_large_image",
+    "twitter:creator": "@remix_run",
+    "twitter:site": "@remix_run",
+    "twitter:title": "Remix Jokes",
+    "twitter:description": description,
   };
 };
 
@@ -42,7 +43,7 @@ export const links: LinksFunction = () => {
 
 function Document({
   children,
-  title = `Remix: So great, it's funny!`
+  title = "Remix: So great, it's funny!"
 }: {
   children: React.ReactNode;
   title?: string;
@@ -51,13 +52,12 @@ function Document({
     <html lang="en">
       <head>
         <meta charSet="utf-8"/>
-        <title>{title}</title>
-        <Meta />
+        <Meta/>
         <Links/>
       </head>
       <body>
         {children}
-        <Scripts />
+        <Scripts/>
         {process.env.NODE_ENV === "development" ? (<LiveReload/>) : null}
       </body>
     </html>
@@ -68,9 +68,7 @@ export function CatchBoundary() {
   const caught = useCatch();
 
   return (
-    <Document
-      title={`${caught.status} ${caught.statusText}`}
-    >
+    <Document title={`${caught.status} ${caught.statusText}`}>
       <div className="error-container">
         <h1>
           {caught.status} {caught.statusText}
@@ -96,7 +94,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
 export default function App() {
   return (
     <Document>
-      <Outlet />
+      <Outlet/>
     </Document>
   );
 }

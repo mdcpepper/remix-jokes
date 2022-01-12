@@ -1,5 +1,5 @@
 import type { LoaderFunction } from "remix";
-import { db } from "~/utils/db.server";
+import { getLatestJokes } from "~/domain/jokes/joke";
 
 function escapeCdata(s: string) {
   return s.replaceAll("]]>", "]]]]><![CDATA[>");
@@ -10,22 +10,20 @@ function escapeHtml(s: string) {
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
+    .replaceAll("\"", "&quot;")
     .replaceAll("'", "&#039;");
 }
 
 export const loader: LoaderFunction = async ({
   request
 }) => {
-  const jokes = await db.joke.findMany({
-    take: 100,
-    orderBy: { createdAt: 'desc' },
-    include: { jokester: { select: {username: true }}}
+  const jokes = await getLatestJokes(100, {
+    include: { jokester: { select: { username: true } } }
   });
 
   const host =
-    request.headers.get('X-Forwarded-Host') ??
-    request.headers.get('host');
+    request.headers.get("X-Forwarded-Host") ??
+    request.headers.get("host");
 
   if (!host) {
     throw new Error("Could not determine domain URL.");
@@ -45,7 +43,7 @@ export const loader: LoaderFunction = async ({
         <generator>Kody the Koala</generator>
         <ttl>40</ttl>
         ${jokes.map(joke =>
-          `<item>
+    `<item>
               <title><![CDATA[${escapeCdata(joke.name)}]]></title>
               <description><![CDATA[A funny joke called ${escapeHtml(joke.name)}]]></description>
               <author><![CDATA[${escapeCdata(joke.jokester.username)}]]></author>
@@ -54,16 +52,16 @@ export const loader: LoaderFunction = async ({
               <guid>${jokesUrl}/${joke.id}</guid>
             </item>
           `.trim()).join("\n")
-        }
+}
       </channel>
     </rss>
   `.trim();
 
   return new Response(rssString, {
     headers: {
-      'Cache-Control': `public, max-age=${60 * 10}, s-maxage=${60 * 60 * 24}`,
-      'Content-Type': 'application/xml',
-      'Content-Length': String(Buffer.byteLength(rssString))
+      "Cache-Control": `public, max-age=${60 * 10}, s-maxage=${60 * 60 * 24}`,
+      "Content-Type": "application/xml",
+      "Content-Length": String(Buffer.byteLength(rssString))
     }
   });
-}
+};

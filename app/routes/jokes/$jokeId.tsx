@@ -1,29 +1,23 @@
 import type { Joke } from "@prisma/client";
 import type { ActionFunction, LoaderFunction, MetaFunction } from "remix";
-import { useLoaderData, useCatch, redirect, useParams } from "remix";
-import { db } from "~/utils/db.server";
-import { getUserId, requireUserId } from "~/utils/session.server";
+import { redirect, useCatch, useLoaderData, useParams } from "remix";
+import { getCurrentUserId, getRequiredCurrentUserId } from "~/support/session.server";
 import { JokeDisplay } from "~/components/joke";
+import { deleteJokeById, getJokeById } from "~/domain/jokes/joke";
+import invariant from "ts-invariant";
 
 type LoaderData = {
   joke: Joke,
   isOwner: boolean
 };
 
-export const meta: MetaFunction = ({
-  data
-} : {
-  data: LoaderData | undefined
-}) => {
+export const meta: MetaFunction = ({ data }: { data: LoaderData | undefined; }) => {
   if (!data) {
-    return {
-      title: "No joke",
-      description: "No joke found",
-    };
+    return { title: "No joke", description: "No joke found" };
   }
 
   return {
-    title: `"${data.joke.name}" joke`,
+    title: `Remix Jokes | "${data.joke.name}" joke`,
     description: `Enjoy the "${data.joke.name}" joke and much more`,
   };
 };
@@ -32,9 +26,11 @@ export const loader: LoaderFunction = async ({
   request,
   params
 }) => {
+  invariant(params.jokeId);
+
   const [userId, joke] = await Promise.all([
-    getUserId(request),
-    db.joke.findUnique({where: { id: params.jokeId }})
+    getCurrentUserId(request),
+    getJokeById(params.jokeId, { select: { id: true, name: true, content: true, jokesterId: true } }),
   ]);
 
   if (!joke) {
@@ -54,10 +50,13 @@ export const action: ActionFunction = async ({
   params
 }) => {
   const form = await request.formData();
+
   if (form.get("_method") === "delete") {
+    invariant(params.jokeId);
+
     const [userId, joke] = await Promise.all([
-      requireUserId(request),
-      db.joke.findUnique({where: { id: params.jokeId }}),
+      getRequiredCurrentUserId(request),
+      getJokeById(params.jokeId, { select: { id: true, jokesterId: true } }),
     ]);
 
     if (!joke) {
@@ -68,7 +67,7 @@ export const action: ActionFunction = async ({
       throw new Response("Pssh, nice try. That's not your joke", { status: 401 });
     }
 
-    await db.joke.delete({ where: { id: params.jokeId } });
+    await deleteJokeById(params.jokeId);
 
     return redirect("/jokes");
   }
@@ -79,23 +78,23 @@ export function CatchBoundary() {
   const params = useParams();
 
   switch (caught.status) {
-    case 404: {
-      return (
-        <div className="error-container">
+  case 404: {
+    return (
+      <div className="error-container">
           Huh? What the heck is {params.jokeId}?
-        </div>
-      );
-    }
-    case 401: {
-      return (
-        <div className="error-container">
+      </div>
+    );
+  }
+  case 401: {
+    return (
+      <div className="error-container">
           Sorry, but {params.jokeId} is not your joke.
-        </div>
-      );
-    }
-    default: {
-      throw new Error(`Unhandled error: ${caught.status}`);
-    }
+      </div>
+    );
+  }
+  default: {
+    throw new Error(`Unhandled error: ${caught.status}`);
+  }
   }
 }
 
@@ -113,6 +112,6 @@ export default function JokeRoute() {
   const data = useLoaderData<LoaderData>();
 
   return (
-    <JokeDisplay joke={data.joke} isOwner={data.isOwner} canDelete={true} />
+    <JokeDisplay joke={data.joke} isOwner={data.isOwner} canDelete={true}/>
   );
 }

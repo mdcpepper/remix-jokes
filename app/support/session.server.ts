@@ -1,6 +1,5 @@
-import bcrypt from "bcryptjs";
 import { createCookieSessionStorage, redirect } from "remix";
-import { db } from "./db.server";
+import { isCorrectPassword, getUserById, getUserByUsername } from "~/domain/auth/user";
 
 const sessionSecret = process.env.SESSION_SECRET;
 if (!sessionSecret) {
@@ -19,42 +18,25 @@ const storage = createCookieSessionStorage({
   }
 });
 
-type LoginForm = {
+type UserLoginDetails = {
   username: string;
   password: string;
 };
 
-export async function login({
-  username,
-  password
-}: LoginForm) {
-  const user = await db.user.findUnique({
-    where: { username }
-  });
-  if (!user) return null;
+export async function login({username, password}: UserLoginDetails) {
+  const user = await getUserByUsername(username);
 
-  const isCorrectPassword = await bcrypt.compare(
-    password,
-    user.passwordHash
-  );
-  if (!isCorrectPassword) return null;
+  if (!user || !await isCorrectPassword(password, user.passwordHash)) {
+    return null
+  }
 
   return user;
 }
 
-export async function register({username, password}: LoginForm) {
-  const passwordHash = await bcrypt.hash(password, 10);
-  return db.user.create({
-    data: { username, passwordHash }
-  });
-}
-
-export async function createUserSession(
-  userId: string,
-  redirectTo: string
-) {
+export async function createUserSession(userId: string, redirectTo: string) {
   const session = await storage.getSession();
   session.set("userId", userId);
+
   return redirect(redirectTo, {
     headers: {
       "Set-Cookie": await storage.commitSession(session)
@@ -66,7 +48,7 @@ export function getUserSession(request: Request) {
   return storage.getSession(request.headers.get('Cookie'));
 }
 
-export async function getUserId(request: Request) {
+export async function getCurrentUserId(request: Request) {
   const session = await getUserSession(request);
   const userId = session.get('userId');
 
@@ -77,10 +59,7 @@ export async function getUserId(request: Request) {
   return userId;
 }
 
-export async function requireUserId(
-  request: Request,
-  redirectTo: string = new URL(request.url).pathname
-) {
+export async function getRequiredCurrentUserId(request: Request, redirectTo: string = new URL(request.url).pathname) {
   const session = await getUserSession(request);
   const userId = session.get('userId');
 
@@ -95,17 +74,14 @@ export async function requireUserId(
   return userId;
 }
 
-export async function getUser(request: Request, query: object = {}) {
-  const userId = await getUserId(request);
+export async function getCurrentUser(request: Request, query: object = {}) {
+  const userId = await getCurrentUserId(request);
   if (typeof userId !== 'string') {
     return null;
   }
 
   try {
-    return await db.user.findUnique({
-      ...query,
-      where: {id: userId}
-    });
+    return await getUserById(userId, query);
   } catch {
     throw await logout(request);
   }

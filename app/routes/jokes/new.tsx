@@ -1,13 +1,19 @@
 import type { ActionFunction, LoaderFunction } from "remix";
-import { Link, Form, useActionData, redirect, json, useCatch, useTransition} from "remix";
-import { db } from "~/utils/db.server";
+import { Form, json, Link, MetaFunction, redirect, useActionData, useCatch, useTransition } from "remix";
 import { JokeDisplay } from "~/components/joke";
-import { getUserId, requireUserId } from "~/utils/session.server";
+import { getCurrentUserId, getRequiredCurrentUserId } from "~/support/session.server";
+import { createJoke } from "~/domain/jokes/joke";
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "Remix Jokes | New Joke"
+  };
+};
 
 export const loader: LoaderFunction = async ({
   request
 }) => {
-  const userId = await getUserId(request);
+  const userId = await getCurrentUserId(request);
 
   if (!userId) {
     throw new Response("Unauthorized", { status: 401 });
@@ -18,13 +24,13 @@ export const loader: LoaderFunction = async ({
 
 function validateJokeName(name: string) {
   if (name.length < 2) {
-    return `That joke's name is too short`;
+    return "That joke's name is too short";
   }
 }
 
 function validateJokeContent(content: string) {
   if (content.length < 10) {
-    return `That joke is too short`;
+    return "That joke is too short";
   }
 }
 
@@ -40,12 +46,12 @@ type ActionData = {
   };
 };
 
-const badRequest = (data: ActionData) => json(data, { status: 400});
+const badRequest = (data: ActionData) => json(data, { status: 400 });
 
 export const action: ActionFunction = async ({
   request
 }) => {
-  const userId = await requireUserId(request);
+  const userId = await getRequiredCurrentUserId(request);
   const form = await request.formData();
   const name = form.get("name");
   const content = form.get("content");
@@ -54,7 +60,7 @@ export const action: ActionFunction = async ({
     typeof content !== "string"
   ) {
     return badRequest({
-      formError: `Form not submitted correctly`
+      formError: "Form not submitted correctly"
     });
   }
 
@@ -63,15 +69,13 @@ export const action: ActionFunction = async ({
     content: validateJokeContent(content),
   };
 
-  const fields = {name, content};
+  const fields = { name, content };
 
   if (Object.values(fieldErrors).some(Boolean)) {
-    return badRequest({ fieldErrors, fields});
+    return badRequest({ fieldErrors, fields });
   }
 
-  const joke = await db.joke.create({
-    data: { ...fields, jokesterId: userId }
-  });
+  const joke = await createJoke({ ...fields, jokesterId: userId });
 
   return redirect(`/jokes/${joke.id}`);
 };
@@ -96,7 +100,7 @@ export function ErrorBoundary({ error }: { error: Error }) {
     <div className="error-container">
       Something unexpected went wrong. Sorry about that.
     </div>
-  )
+  );
 }
 
 export default function NewJoke() {
@@ -104,17 +108,17 @@ export default function NewJoke() {
   const transition = useTransition();
 
   if (transition.submission) {
-    const name = transition.submission.formData.get('name');
-    const content = transition.submission.formData.get('content');
+    const name = transition.submission.formData.get("name");
+    const content = transition.submission.formData.get("content");
 
     if (
-      typeof name === 'string' &&
-      typeof content === 'string' &&
+      typeof name === "string" &&
+      typeof content === "string" &&
       !validateJokeName(name) &&
       !validateJokeContent(content)
     ) {
       return (
-        <JokeDisplay joke={{ name, content }} isOwner={true} canDelete={false} />
+        <JokeDisplay joke={{ name, content }} isOwner={true} canDelete={false}/>
       );
     }
   }
